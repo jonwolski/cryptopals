@@ -59,7 +59,7 @@ pub fn main() {
         }).reduce(
             ComputedXor::new,
             |acc, x| {
-                if x.score > acc.score {
+                if x.score >= acc.score {
                     x
                 } else {
                     acc

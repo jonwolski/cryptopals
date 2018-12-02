@@ -6,3 +6,4 @@ authors = ["Jonathan K. Wolski <jonathan.k.wolski@disney.com>"]
 [dependencies]
 hex = "^0.3.2"
 base64 = "^0.10.0"
+lazy_static = "^1.2.0"

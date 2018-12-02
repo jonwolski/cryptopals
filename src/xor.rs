@@ -2,19 +2,32 @@ use super::*;
 use rayon::prelude::*;
 use std::fmt;
 
+#[derive(Eq, PartialEq, Debug)]
 pub struct ComputedXor {
-    mask: u8,
-    score: f32,
-    value: Vec<u8>,
+    pub mask: u8,
+    pub score: u64,
+    pub value: Vec<u8>,
 }
 
 impl ComputedXor {
     fn new() -> ComputedXor {
         ComputedXor {
             mask: 0,
-            score: 0.0,
+            score: 0,
             value: Vec::new(),
         }
+    }
+}
+
+use std::cmp::Ordering;
+impl Ord for ComputedXor {
+    fn cmp(&self, other: &ComputedXor) -> Ordering {
+		self.score.cmp(&other.score)
+    }
+}
+impl PartialOrd for ComputedXor {
+    fn partial_cmp(&self, other: &ComputedXor) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }
 
@@ -36,12 +49,12 @@ pub fn brute_force_xor(input: &[u8]) -> ComputedXor {
         .into_par_iter()
         .map(|mask_int| {
             let mask = mask_int as u8;
-            let mut score = 0.0;
+            let mut score = 0;
             let value = input
                 .iter()
                 .map(|b| {
                     let unmasked = b ^ mask;
-                    score += LETTER_FREQUENCIES.get(&unmasked).unwrap_or(&0.0);
+                    score += LETTER_FREQUENCIES.get(&unmasked).unwrap_or(&0);
                     unmasked
                 }).collect();
             ComputedXor {
@@ -49,16 +62,7 @@ pub fn brute_force_xor(input: &[u8]) -> ComputedXor {
                 value: value,
                 mask: mask,
             }
-        }).reduce(
-            ComputedXor::new,
-            |acc, x| {
-                if x.score >= acc.score {
-                    x
-                } else {
-                    acc
-                }
-            },
-            )
+        }).max().expect("Iterator cannot be empty, because it is based on statically defined range.")
 }
 
 #[cfg(test)]

@@ -1,7 +1,9 @@
 extern crate cryptopals;
 extern crate hex;
+extern crate rayon;
 
 use cryptopals::*;
+use rayon::prelude::*;
 use std::fmt;
 
 struct ComputedXor {
@@ -36,8 +38,11 @@ pub fn main() {
     let input = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
     let input_bytes = hex::decode(input).unwrap();
 
-    let best_mask = (0..=255)
-        .map(|mask| {
+    // rayon par_iter is not implemented for InclusiveRange
+    let best_mask = (0..0x100)
+        .into_par_iter()
+        .map(|mask_int| {
+            let mask = mask_int as u8;
             let mut score = 0.0;
             let value = input_bytes
                 .iter()
@@ -51,13 +56,16 @@ pub fn main() {
                 value: value,
                 mask: mask,
             }
-        }).fold(ComputedXor::new(), |acc, x| {
-            if x.score > acc.score {
-                x
-            } else {
-                acc
-            }
-        });
+        }).reduce(
+            ComputedXor::new,
+            |acc, x| {
+                if x.score > acc.score {
+                    x
+                } else {
+                    acc
+                }
+            },
+        );
 
     println!("{}", best_mask);
 }

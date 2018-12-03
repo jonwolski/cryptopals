@@ -12,7 +12,7 @@ pub struct ComputedXor {
 use std::cmp::Ordering;
 impl Ord for ComputedXor {
     fn cmp(&self, other: &ComputedXor) -> Ordering {
-		self.score.cmp(&other.score)
+        self.score.cmp(&other.score)
     }
 }
 impl PartialOrd for ComputedXor {
@@ -29,13 +29,13 @@ impl fmt::Display for ComputedXor {
             self.score,
             self.mask,
             String::from_utf8_lossy(&self.value)
-            )
+        )
     }
 }
 
-pub fn brute_force_xor(input: &[u8]) -> ComputedXor {
+pub fn brute_force_xor(input: &[u8]) -> Vec<ComputedXor> {
     // rayon par_iter is not implemented for InclusiveRange
-    (0..0x100)
+    let mut results = (0..0x100)
         .into_par_iter()
         .map(|mask_int| {
             let mask = mask_int as u8;
@@ -52,7 +52,13 @@ pub fn brute_force_xor(input: &[u8]) -> ComputedXor {
                 value: value,
                 mask: mask,
             }
-        }).max().expect("Iterator cannot be empty, because it is based on statically defined range.")
+        }).collect::<Vec<ComputedXor>>();
+    results.sort();
+    results.into_iter().rev()
+        // TODO: replace this magical take(5) with some sort of filter by score threshold, maybe a
+        // fn arg
+        .take(5)
+        .collect()
 }
 
 #[cfg(test)]
@@ -62,9 +68,16 @@ mod tests {
     // Exercise 3
     #[test]
     fn brute_force_xor_test() {
-        let input = hex::decode("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736").unwrap();
-        let output = brute_force_xor(&input);
-        assert_eq!( 88, output.mask);
-        assert_eq!( "Cooking MC's like a pound of bacon", String::from_utf8_lossy(&output.value));
+        let input =
+            hex::decode("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736")
+                .unwrap();
+        let results = brute_force_xor(&input);
+        let maybe_output = results.first();
+        let output = maybe_output.unwrap();
+        assert_eq!(88, output.mask);
+        assert_eq!(
+            "Cooking MC's like a pound of bacon",
+            String::from_utf8_lossy(&output.value)
+        );
     }
 }

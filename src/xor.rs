@@ -9,16 +9,6 @@ pub struct ComputedXor {
     pub value: Vec<u8>,
 }
 
-impl ComputedXor {
-    fn new() -> ComputedXor {
-        ComputedXor {
-            mask: 0,
-            score: 0,
-            value: Vec::new(),
-        }
-    }
-}
-
 use std::cmp::Ordering;
 impl Ord for ComputedXor {
     fn cmp(&self, other: &ComputedXor) -> Ordering {

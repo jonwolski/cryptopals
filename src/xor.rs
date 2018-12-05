@@ -2,17 +2,28 @@ use super::*;
 use rayon::prelude::*;
 use std::fmt;
 
-#[derive(Eq, PartialEq, Debug)]
+const SCORE_THRESHOLD: f32 = 0.265;
+
+#[derive(PartialEq, Debug)]
 pub struct ComputedXor {
     pub mask: u8,
-    pub score: u64,
+    pub score: f32,
     pub value: Vec<u8>,
 }
+
+impl Eq for ComputedXor {}
 
 use std::cmp::Ordering;
 impl Ord for ComputedXor {
     fn cmp(&self, other: &ComputedXor) -> Ordering {
-        self.score.cmp(&other.score)
+        // TODO: must ensure that neither is ever NaN
+        if self.score > other.score {
+            Ordering::Greater
+        } else if self.score < other.score {
+            Ordering::Less
+        } else {
+            Ordering::Equal
+        }
     }
 }
 impl PartialOrd for ComputedXor {
@@ -39,26 +50,23 @@ pub fn brute_force_xor(input: &[u8]) -> Vec<ComputedXor> {
         .into_par_iter()
         .map(|mask_int| {
             let mask = mask_int as u8;
-            let mut score = 0;
+            let mut score = 0.0_f32;
             let value = input
                 .iter()
                 .map(|b| {
                     let unmasked = b ^ mask;
-                    score += LETTER_FREQUENCIES.get(&unmasked).unwrap_or(&0);
+                    score += LETTER_FREQUENCIES.get(&unmasked).unwrap_or(&0.0);
                     unmasked
-                }).collect();
+                }).collect::<Vec<u8>>();
             ComputedXor {
-                score: score,
+                score: score / (value.len() as f32),
                 value: value,
                 mask: mask,
             }
-        }).collect::<Vec<ComputedXor>>();
+        }).filter(|c| c.score > SCORE_THRESHOLD)
+        .collect::<Vec<ComputedXor>>();
     results.sort();
-    results.into_iter().rev()
-        // TODO: replace this magical take(5) with some sort of filter by score threshold, maybe a
-        // fn arg
-        .take(5)
-        .collect()
+    results.into_iter().rev().collect()
 }
 
 #[cfg(test)]

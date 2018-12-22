@@ -1,5 +1,7 @@
 extern crate base64;
+extern crate hamming;
 extern crate hex;
+extern crate itertools;
 #[macro_use]
 extern crate lazy_static;
 extern crate rayon;

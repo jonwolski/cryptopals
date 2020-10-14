@@ -45,11 +45,9 @@ impl fmt::Display for ComputedXor {
 }
 
 pub fn brute_force_xor(input: &[u8]) -> Vec<ComputedXor> {
-    // rayon par_iter is not implemented for InclusiveRange
-    let mut results = (0..0x100)
+    let mut results = (0u8..=0xFF)
         .into_par_iter()
-        .map(|mask_int| {
-            let mask = mask_int as u8;
+        .map(|mask| {
             let mut score = 0.0_f32;
             let value = input
                 .iter()
